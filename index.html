@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rodric – The Milk Foam Oracle</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0705; --dark: #120e09;
+    --ember: #c4520a; --gold: #c9922a;
+    --gold-light: #e8b84b; --cream: #e8dcc8;
+    --ash: #7a6e5f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--cream); font-family:'IM Fell English',serif; min-height:100vh; overflow-x:hidden; }
+  body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse 60% 40% at 20% 80%,rgba(180,60,0,.18) 0%,transparent 70%),radial-gradient(ellipse 80% 60% at 50% 100%,rgba(120,30,0,.25) 0%,transparent 70%); pointer-events:none; z-index:0; }
+  .container { position:relative; z-index:1; max-width:720px; margin:0 auto; padding:36px 24px 60px; }
+
+  header { text-align:center; margin-bottom:44px; }
+  .rune-bar { font-size:1.3rem; color:var(--ember); letter-spacing:8px; opacity:.7; margin-bottom:10px; animation:flicker 4s ease-in-out infinite; }
+  @keyframes flicker { 0%,100%{opacity:.7} 45%{opacity:.45} 50%{opacity:.9} }
+  h1 { font-family:'Cinzel Decorative',serif; font-size:clamp(2rem,6vw,3.8rem); font-weight:900; color:var(--gold-light); text-shadow:0 0 30px rgba(232,184,75,.5),0 0 60px rgba(196,82,10,.3); letter-spacing:2px; }
+  .subtitle { font-family:'Cinzel',serif; font-size:.8rem; letter-spacing:6px; color:var(--ash); text-transform:uppercase; margin-top:8px; }
+  .tagline { font-style:italic; color:var(--ash); font-size:.88rem; max-width:440px; margin:16px auto 0; line-height:1.7; }
+
+  .divider { display:flex; align-items:center; gap:16px; margin:24px 0; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--ember),transparent); }
+  .divider-icon { color:var(--gold); font-size:1.1rem; }
+
+  .upload-zone { border:2px dashed rgba(196,82,10,.45); padding:44px 24px; text-align:center; cursor:pointer; transition:all .3s; background:rgba(18,14,9,.8); }
+  .upload-zone:hover,.upload-zone.drag { border-color:var(--gold); box-shadow:0 0 30px rgba(196,82,10,.2); }
+  .upload-icon { font-size:3rem; margin-bottom:12px; display:block; }
+  .upload-label { font-family:'Cinzel',serif; font-size:.85rem; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:6px; }
+  .upload-hint { font-size:.82rem; color:var(--ash); font-style:italic; }
+  #fileInput { display:none; }
+
+  .preview-wrap { display:none; flex-direction:column; align-items:center; gap:14px; }
+  .preview-wrap.visible { display:flex; }
+  .preview-frame { border:2px solid var(--ember); box-shadow:0 0 30px rgba(196,82,10,.35); position:relative; }
+  .preview-frame::before { content:'᛭'; position:absolute; top:-11px; left:-11px; color:var(--gold); font-size:1.1rem; }
+  .preview-frame::after  { content:'᛭'; position:absolute; bottom:-11px; right:-11px; color:var(--gold); font-size:1.1rem; }
+  #previewImg { display:block; max-width:100%; max-height:300px; object-fit:contain; filter:sepia(.1) contrast(1.05); }
+  .change-btn { background:none; border:1px solid var(--ash); color:var(--ash); padding:5px 18px; font-family:'Cinzel',serif; font-size:.72rem; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+  .change-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+  .oracle-btn { display:block; width:100%; padding:16px 32px; background:linear-gradient(135deg,#7a2d06,#c4520a,#7a2d06); border:none; border-top:1px solid rgba(232,184,75,.4); border-bottom:1px solid rgba(232,184,75,.4); color:var(--gold-light); font-family:'Cinzel Decorative',serif; font-size:1rem; font-weight:700; letter-spacing:3px; cursor:pointer; text-transform:uppercase; transition:all .4s; margin-top:24px; box-shadow:0 4px 20px rgba(196,82,10,.3); }
+  .oracle-btn:hover:not(:disabled) { box-shadow:0 6px 30px rgba(196,82,10,.5); letter-spacing:5px; }
+  .oracle-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  .loading { display:none; text-align:center; padding:44px 24px; }
+  .loading.visible { display:block; }
+  .rune-spinner { font-size:2.8rem; color:var(--ember); display:inline-block; animation:spin 2s linear infinite; text-shadow:0 0 20px rgba(196,82,10,.6); }
+  @keyframes spin { 100%{transform:rotate(360deg)} }
+  .loading-text { font-family:'Cinzel',serif; font-size:.78rem; letter-spacing:4px; color:var(--ash); text-transform:uppercase; margin-top:14px; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .error-msg { display:none; text-align:center; padding:18px 20px; color:#e87050; font-style:italic; border:1px solid rgba(196,82,10,.3); margin-top:18px; line-height:1.6; font-size:.88rem; white-space:pre-line; }
+  .error-msg.visible { display:block; }
+
+  .oracle-card { display:none; position:relative; margin-top:36px; background:linear-gradient(160deg,rgba(20,14,8,.97),rgba(12,8,4,.99)); border:1px solid rgba(196,82,10,.4); box-shadow:0 0 60px rgba(196,82,10,.15); padding:40px 36px; }
+  .oracle-card.visible { display:block; animation:reveal .8s ease forwards; }
+  @keyframes reveal { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .oracle-card::before { content:'ᚱ'; position:absolute; top:10px; left:14px; font-size:1.3rem; color:var(--ember); opacity:.45; }
+  .oracle-card::after  { content:'ᚾ'; position:absolute; bottom:10px; right:14px; font-size:1.3rem; color:var(--ember); opacity:.45; }
+
+  .rodric-header { display:flex; align-items:center; gap:18px; margin-bottom:28px; }
+  .rodric-avatar { width:66px; height:66px; border-radius:50%; background:radial-gradient(circle,#3d1a05,#1a0a02); border:2px solid var(--ember); display:flex; align-items:center; justify-content:center; font-size:2rem; flex-shrink:0; animation:glow 3s ease-in-out infinite; }
+  @keyframes glow { 0%,100%{box-shadow:0 0 18px rgba(196,82,10,.4)} 50%{box-shadow:0 0 32px rgba(196,82,10,.7)} }
+  .rodric-name { font-family:'Cinzel Decorative',serif; font-size:1.2rem; font-weight:700; color:var(--gold-light); margin-bottom:4px; }
+  .rodric-title { font-family:'Cinzel',serif; font-size:.68rem; letter-spacing:4px; color:var(--ash); text-transform:uppercase; }
+
+  .section-label { font-family:'Cinzel',serif; font-size:.66rem; letter-spacing:5px; color:var(--ember); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+  .section-label::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(196,82,10,.5),transparent); }
+
+  .interpretation { font-size:1rem; line-height:1.9; color:var(--cream); margin-bottom:30px; font-style:italic; }
+  .saying-box { background:rgba(196,82,10,.06); border-left:3px solid var(--ember); padding:18px 22px; }
+  .saying-text { font-family:'Cinzel',serif; font-size:.95rem; font-weight:600; color:var(--gold-light); line-height:1.7; text-align:center; }
+
+  footer { text-align:center; margin-top:60px; color:rgba(122,110,95,.35); font-size:.72rem; letter-spacing:3px; font-family:'Cinzel',serif; }
+
+  .embers { position:fixed; bottom:0; left:0; width:100%; height:180px; pointer-events:none; z-index:0; overflow:hidden; }
+  .ember { position:absolute; width:2px; height:2px; border-radius:50%; background:var(--ember); bottom:0; box-shadow:0 0 5px var(--ember); animation:rise linear infinite; }
+  @keyframes rise { 0%{transform:translateY(0) translateX(0);opacity:.8} 100%{transform:translateY(-180px) translateX(var(--d));opacity:0} }
+</style>
+</head>
+<body>
+<div class="embers" id="embers"></div>
+<div class="container">
+  <header>
+    <div class="rune-bar">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ</div>
+    <h1>RODRIC</h1>
+    <div class="subtitle">The Viking Milk Foam Oracle</div>
+    <p class="tagline">Upload your milk foam — and Rodric, the Seer of Midgard, shall read your fate within its patterns.</p>
+  </header>
+
+  <div class="divider"><span class="divider-icon">⚔</span></div>
+
+  <div class="upload-zone" id="uploadZone">
+    <span class="upload-icon">☕</span>
+    <div class="upload-label">Upload Milk Foam Image</div>
+    <div class="upload-hint">Click or drag your image here</div>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <div class="preview-frame"><img id="previewImg" src="" alt="Preview"></div>
+    <button class="change-btn" id="changeBtn">↺ Change Image</button>
+  </div>
+
+  <button class="oracle-btn" id="oracleBtn" disabled>ᚱ Consult the Oracle ᚱ</button>
+
+  <div class="loading" id="loading">
+    <div class="rune-spinner">ᚺ</div>
+    <div class="loading-text">Rodric reads the signs...</div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="oracle-card" id="oracleCard">
+    <div class="rodric-header">
+      <div class="rodric-avatar">🧙</div>
+      <div>
+        <div class="rodric-name">Rodric the Seer</div>
+        <div class="rodric-title">Oracle of Midgard · Keeper of the Runes</div>
+      </div>
+    </div>
+    <div class="section-label">The Reading</div>
+    <div class="interpretation" id="interpretationText"></div>
+    <div class="section-label">The Saying</div>
+    <div class="saying-box">
+      <div class="saying-text" id="sayingText"></div>
+    </div>
+  </div>
+
+  <footer>ᚠᚢᚦᚨᚱᚲ · RODRIC · THE ORACLE SPEAKS · ᚷᚹᚺᚾᛁᛃ</footer>
+</div>
+
+<script>
+  const ec = document.getElementById('embers');
+  for(let i=0;i<14;i++){
+    const e=document.createElement('div'); e.className='ember';
+    e.style.cssText=`left:${Math.random()*100}%;animation-duration:${3+Math.random()*5}s;animation-delay:${Math.random()*8}s;--d:${(Math.random()-.5)*60}px`;
+    ec.appendChild(e);
+  }
+
+  const uploadZone  = document.getElementById('uploadZone');
+  const fileInput   = document.getElementById('fileInput');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg  = document.getElementById('previewImg');
+  const changeBtn   = document.getElementById('changeBtn');
+  const oracleBtn   = document.getElementById('oracleBtn');
+  const loading     = document.getElementById('loading');
+  const errorMsg    = document.getElementById('errorMsg');
+  const oracleCard  = document.getElementById('oracleCard');
+
+  let selectedFile = null;
+
+  uploadZone.addEventListener('click', ()=>fileInput.click());
+  uploadZone.addEventListener('dragover', e=>{e.preventDefault();uploadZone.classList.add('drag');});
+  uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag'));
+  uploadZone.addEventListener('drop', e=>{e.preventDefault();uploadZone.classList.remove('drag');const f=e.dataTransfer.files[0];if(f?.type.startsWith('image/'))loadFile(f);});
+  fileInput.addEventListener('change', ()=>{if(fileInput.files[0])loadFile(fileInput.files[0]);});
+  changeBtn.addEventListener('click', ()=>{
+    selectedFile=null; fileInput.value='';
+    previewWrap.classList.remove('visible');
+    uploadZone.style.display='block';
+    oracleBtn.disabled=true;
+    oracleCard.classList.remove('visible');
+    errorMsg.classList.remove('visible');
+  });
+
+  function loadFile(file){
+    selectedFile=file;
+    const r=new FileReader();
+    r.onload=e=>{
+      previewImg.src=e.target.result;
+      uploadZone.style.display='none';
+      previewWrap.classList.add('visible');
+      oracleBtn.disabled=false;
+      oracleCard.classList.remove('visible');
+      errorMsg.classList.remove('visible');
+    };
+    r.readAsDataURL(file);
+  }
+
+  function showError(msg){
+    loading.classList.remove('visible');
+    errorMsg.textContent=msg;
+    errorMsg.classList.add('visible');
+    oracleBtn.disabled=false;
+  }
+
+  oracleBtn.addEventListener('click', async()=>{
+    if(!selectedFile) return;
+    oracleBtn.disabled=true;
+    loading.classList.add('visible');
+    oracleCard.classList.remove('visible');
+    errorMsg.classList.remove('visible');
+
+    try{
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const res = await fetch('/api/oracle', {
+        method: 'POST',
+        body: formData
+      });
+
+      if(!res.ok){
+        const err = await res.json().catch(()=>({}));
+        showError('Error '+res.status+': '+(err?.detail||res.statusText));
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById('interpretationText').textContent = data.reading;
+      document.getElementById('sayingText').textContent = '„'+data.saying+'"';
+      loading.classList.remove('visible');
+      oracleCard.classList.add('visible');
+
+    }catch(e){
+      showError('Network error: '+e.message);
+    }
+    oracleBtn.disabled=false;
+  });
+</script>
+</body>
+</html>
