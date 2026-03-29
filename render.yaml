@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: rodric-oracle
+    name: cycling-espresso-oracle
     runtime: docker
     plan: free
     envVars:
